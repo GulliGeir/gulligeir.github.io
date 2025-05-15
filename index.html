@@ -1,31 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>Iceland Road Map</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha512-XQoYMqMTK8LvdlM2aBtk6aWj2Q3tcP6HJ6G3hZGzG+o5hCuOXE+a6XHEd4cVpCj9ZV8zh/2Xp6jX/eoZhc6VQQ=="
+    crossorigin=""
   />
   <style>
-    html, body, #map {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-    }
+    html, body, #map { height: 100%; margin: 0; padding: 0; }
   </style>
 </head>
 <body>
   <div id="map"></div>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha512-gZwIG9x3wUXgPzKmOPr6G5So7bM+kVb9ZScj6tG0QlkkGu7a72qGVW0p5Mw5v9k+o5Gn5Ll+L5TWTUu9gZJdIQ=="
+    crossorigin=""
+  ></script>
   <script>
-    // Center on Iceland
+    // 1) Initialize map centered on Iceland
     const map = L.map('map').setView([64.0, -19.0], 6);
 
-    // Umferðin tiles endpoint
+    // 2) Add Umferðin tiles
     L.tileLayer(
-      'https://gagnaveita.vegagerdin.is/arcgis/rest/services/Umferdin/MapServer/tile/{z}/{y}/{x}', {
+      'https://gagnaveita.vegagerdin.is/arcgis/rest/services/Umferdin/MapServer/tile/{z}/{y}/{x}',
+      {
         attribution: '&copy; Vegagerðin &amp; Landmælingar Íslands',
         maxZoom: 18
       }

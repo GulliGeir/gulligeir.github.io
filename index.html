@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Iceland Road Map</title>
+  <title>Iceland Road Map with Cameras & Weather</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Leaflet CSS without SRI -->
+  <!-- Leaflet CSS -->
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -15,25 +15,96 @@
       margin: 0;
       padding: 0;
     }
+    .weather-icon {
+      font-size: 24px;
+      line-height: 24px;
+    }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
-  <!-- Leaflet JS without SRI -->
+  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // Initialize the map centered on Iceland
+    // 1) Initialize map
     const map = L.map('map').setView([64.0, -19.0], 6);
 
-    // Add Umferðin tiles
+    // 2) Basemap: Vegagerðin tiles
     L.tileLayer(
-      'https://gagnaveita.vegagerdin.is/arcgis/rest/services/Umferdin/MapServer/tile/{z}/{y}/{x}',
-      {
+      'https://gagnaveita.vegagerdin.is/arcgis/rest/services/Umferdin/MapServer/tile/{z}/{y}/{x}', {
         attribution: '&copy; Vegagerðin &amp; Landmælingar Íslands',
         maxZoom: 18
       }
     ).addTo(map);
+
+    // 3) Cameras
+    const cameraIcon = L.icon({
+      iconUrl: 'https://cdn.jsdelivr.net/npm/ionicons@5.5.2/dist/svg/camera-outline.svg',
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
+    });
+
+    fetch('https://gagnaveita.vegagerdin.is/api/vefmyndavelar2014_1')
+      .then(res => res.json())
+      .then(data => {
+        // Data might be array or { features: [...] }
+        const cams = Array.isArray(data) ? data : (data.features || data);
+        cams.forEach(cam => {
+          const lon = parseFloat(cam.Longitude ?? cam.Lon ?? cam.LONG);
+          const lat = parseFloat(cam.Latitude ?? cam.Lat ?? cam.LAT);
+          if (isNaN(lat) || isNaN(lon)) return;
+
+          const marker = L.marker([lat, lon], { icon: cameraIcon }).addTo(map);
+          const popup = `
+            <strong>Cam #${cam.Maelist_nr}</strong><br/>
+            ${cam.Skyring || ''}<br/>
+            <a href="${cam.Slod}" target="_blank">View image</a>
+          `;
+          marker.bindPopup(popup);
+        });
+      })
+      .catch(console.error);
+
+    // 4) Weather stations
+    const weatherIcon = L.divIcon({
+      className: 'weather-icon',
+      html: '🌡️',
+      iconSize: [24, 24],
+      iconAnchor: [12, 12]
+    });
+
+    fetch('https://xmlweather.vedur.is/?op_w=xml&view=stations&format=json')
+      .then(res => res.json())
+      .then(data => {
+        const stations = data.stations || data.results || [];
+        stations.forEach(st => {
+          const lon = parseFloat(st.lon);
+          const lat = parseFloat(st.lat);
+          if (isNaN(lat) || isNaN(lon)) return;
+
+          const marker = L.marker([lat, lon], { icon: weatherIcon }).addTo(map);
+          marker.on('click', async () => {
+            try {
+              const resp = await fetch(
+                `https://xmlweather.vedur.is/?op_w=xml&view=obs&ids=${st.id}&format=json`
+              );
+              const json = await resp.json();
+              const obs = (json.results && json.results[0]) || json;
+              const content = `
+                <strong>${obs.name}</strong><br/>
+                🌡 Temp: ${obs.T} °C<br/>
+                💧 Dew: ${obs.TD} °C<br/>
+                💨 Wind: ${obs.FG} m/s
+              `;
+              marker.bindPopup(content).openPopup();
+            } catch (err) {
+              console.error(err);
+            }
+          });
+        });
+      })
+      .catch(console.error);
   </script>
 </body>
 </html>

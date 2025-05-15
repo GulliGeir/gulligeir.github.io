@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Iceland Road Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <style>
+    html, body, #map {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // Center on Iceland
+    const map = L.map('map').setView([64.0, -19.0], 6);
+
+    // Umferðin tiles endpoint
+    L.tileLayer(
+      'https://gagnaveita.vegagerdin.is/arcgis/rest/services/Umferdin/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '&copy; Vegagerðin &amp; Landmælingar Íslands',
+        maxZoom: 18
+      }
+    ).addTo(map);
+  </script>
+</body>
+</html>
